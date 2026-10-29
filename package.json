@@ -1,0 +1,23 @@
+{
+  "name": "x-spaces-audio",
+  "version": "0.1.0",
+  "description": "Individual X Spaces audio tracks and speaker activity for local applications",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./protocol": "./src/protocol.mjs",
+    "./build-extension": "./scripts/build-extension.mjs"
+  },
+  "files": ["src/", "extension/", "scripts/", "examples/", "README.md", "LICENSE", "PROTOCOL.md"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "example": "node examples/local-server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SomeGuySomewhereSometime/x-spaces-audio.git"
+  },
+  "keywords": ["x", "twitter", "spaces", "webrtc", "audio", "speaker-activity"]
+}
