@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import vm from 'node:vm';
 import { createLocalBridge } from '../src/index.mjs';
 
 test('real HTTP pairs only same-origin, authenticates events and delivers attributed audio', async t => {
@@ -41,4 +42,36 @@ test('real HTTP pairs only same-origin, authenticates events and delivers attrib
     req.on('error', reject);
   });
   assert.equal(forbidden, 403);
+});
+
+test('local speaker view shows overlap safely and clears expired or disconnected speakers', async t => {
+  const bridge = createLocalBridge();
+  t.after(() => bridge.close());
+  const url = await bridge.listen(0);
+  const html = await (await fetch(url)).text();
+  const nodes = new Map();
+  const element = () => ({ textContent: '', children: [], append(child) { this.children.push(child); }, replaceChildren() { this.children = []; } });
+  for (const id of ['status', 'connection', 'speakers', 'pair']) nodes.set(id, element());
+  let snapshot = { state: 'connected', tracks: 2, mode: 'activity', activity: { expiresAtMs: Date.now() + 5000, speakers: [{ handle: 'demo_one', displayName: '<img src=x>', feed: '100' }, { handle: '', feed: '200' }] } };
+  let unavailable = false;
+  const context = vm.createContext({
+    document: { getElementById: id => nodes.get(id), createElement: element },
+    window: { addEventListener() {}, postMessage() {} }, location: { origin: url },
+    setInterval() {}, setTimeout() {}, clearTimeout() {}, AbortSignal, Date,
+    fetch: async path => {
+      if (unavailable) throw new Error('offline');
+      return { ok: true, json: async () => path.endsWith('/pair') ? { token: 'a'.repeat(64) } : snapshot };
+    }
+  });
+  vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], context);
+  await nodes.get('pair').onclick();
+  await context.poll();
+  assert.deepEqual(nodes.get('speakers').children.map(node => node.textContent), ['<img src=x> (@demo_one)', 'Unknown speaker (feed 200)']);
+  snapshot.activity.expiresAtMs = Date.now() - 1;
+  await context.poll();
+  assert.equal(nodes.get('speakers').children[0].textContent, 'No voice activity detected.');
+  unavailable = true;
+  await context.poll();
+  assert.equal(nodes.get('speakers').children.length, 0);
+  assert.match(nodes.get('connection').textContent, /unavailable/);
 });

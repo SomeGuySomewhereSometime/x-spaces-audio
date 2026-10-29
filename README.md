@@ -1,6 +1,6 @@
 # X Spaces Audio
 
-Individual audio tracks and speaker activity from an **open X Space** to your local application. Extracted from the BOB voice project's browser integration.
+Receive **separate audio tracks per speaker**, associate each feed with its **@handle**, and see **who is speaking now**, including overlap, in an open X Space. Extracted from the BOB voice project's browser integration.
 
 This is an experimental, unofficial integration. It observes the WebRTC tracks and X/Periscope/Janus metadata already received by the browser. It does **not** use `twitter-api-client`, the official X developer API, a caption service, voice recognition for identity, or an external capture server.
 
@@ -28,7 +28,7 @@ npm run example -- YOUR_SPACE_ID
 1. Open `chrome://extensions`, enable Developer mode and choose **Load unpacked**. Select this repository's `extension/` folder. For a release extension ZIP, extract it first and select the folder containing `manifest.json`.
 2. Open **http://127.0.0.1:4319** in that same browser profile and click **Pair extension**.
 3. Open or reload the X Space. The extension needs to observe its connection setup; if necessary, leave and rejoin the Space. Use the normal X account/session in the browser.
-4. The terminal prints active speaker handles. To forward individual PCM chunks as well, restart with:
+4. The local page shows active speakers and the terminal prints their handles. To forward individual PCM chunks as well, restart with:
 
 ```sh
 npm run example -- YOUR_SPACE_ID --audio
